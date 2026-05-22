@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Precoding Design Spec Companion</title>
+  <style>
+    /*
+     * BRAINSTORM COMPANION FRAME TEMPLATE
+     *
+     * This template provides a consistent frame with:
+     * - OS-aware light/dark theming
+     * - Fixed header and selection indicator bar
+     * - Scrollable main content area
+     * - CSS helpers for common UI patterns
+     *
+     * Content is injected via placeholder comment in #claude-content.
+     */
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; overflow: hidden; }
+
+    /* ===== THEME VARIABLES ===== */
+    :root {
+      --bg-primary: #f5f5f7;
+      --bg-primary-grad: #e5e5ea;
+      --bg-secondary: #ffffff;
+      --bg-header: rgba(255, 255, 255, 0.75);
+      --bg-tertiary: #e5e5e7;
+      --border: #d1d1d6;
+      --text-primary: #1d1d1f;
+      --text-secondary: #86868b;
+      --text-tertiary: #aeaeb2;
+      --accent: #0071e3;
+      --accent-hover: #0077ed;
+      --success: #34c759;
+      --warning: #ff9f0a;
+      --error: #ff3b30;
+      --selected-bg: #e8f4fd;
+      --selected-border: #0071e3;
+      --shadow-color: rgba(0, 0, 0, 0.05);
+      --selected-shadow: rgba(0, 113, 227, 0.15);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg-primary: #1d1d1f;
+        --bg-primary-grad: #121212;
+        --bg-secondary: #2d2d2f;
+        --bg-header: rgba(45, 45, 47, 0.75);
+        --bg-tertiary: #3d3d3f;
+        --border: #424245;
+        --text-primary: #f5f5f7;
+        --text-secondary: #86868b;
+        --text-tertiary: #636366;
+        --accent: #0a84ff;
+        --accent-hover: #409cff;
+        --selected-bg: rgba(10, 132, 255, 0.15);
+        --selected-border: #0a84ff;
+        --shadow-color: rgba(0, 0, 0, 0.2);
+        --selected-shadow: rgba(10, 132, 255, 0.25);
+      }
+    }
+
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-primary-grad) 100%);
+      color: var(--text-primary);
+      display: flex;
+      flex-direction: column;
+      line-height: 1.5;
+    }
+
+    /* ===== FRAME STRUCTURE ===== */
+    .header {
+      background: var(--bg-header);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      padding: 0.75rem 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+      z-index: 100;
+    }
+    .header h1 { font-size: 0.85rem; font-weight: 500; color: var(--text-secondary); }
+    .header .status { font-size: 0.7rem; color: var(--success); display: flex; align-items: center; gap: 0.4rem; }
+    .header .status::before { content: ''; width: 6px; height: 6px; background: var(--success); border-radius: 50%; }
+
+    .main { flex: 1; overflow-y: auto; }
+    #claude-content { padding: 2rem; min-height: 100%; }
+
+    .indicator-bar {
+      background: var(--bg-header);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-top: 1px solid var(--border);
+      padding: 0.75rem 1.5rem;
+      flex-shrink: 0;
+      text-align: center;
+      z-index: 100;
+    }
+    .indicator-bar span {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+    }
+    .indicator-bar .selected-text {
+      color: var(--accent);
+      font-weight: 500;
+    }
+
+    /* ===== TYPOGRAPHY ===== */
+    h2 { font-size: 1.5rem; font-weight: 600; margin-bottom: 0.5rem; }
+    h3 { font-size: 1.1rem; font-weight: 600; margin-bottom: 0.25rem; }
+    .subtitle { color: var(--text-secondary); margin-bottom: 1.5rem; }
+    .section { margin-bottom: 2rem; }
+    .label { font-size: 0.7rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem; }
+
+    /* ===== OPTIONS (for A/B/C choices) ===== */
+    .options { display: flex; flex-direction: column; gap: 0.75rem; }
+    .option {
+      background: var(--bg-secondary);
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      padding: 1rem 1.25rem;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      display: flex;
+      align-items: flex-start;
+      gap: 1rem;
+    }
+    .option:active {
+      transform: scale(0.985);
+    }
+    .option:hover {
+      border-color: var(--accent);
+      box-shadow: 0 4px 12px var(--shadow-color);
+      transform: translateY(-1px);
+    }
+    .option.selected {
+      background: var(--selected-bg);
+      border-color: var(--selected-border);
+      box-shadow: 0 4px 12px var(--selected-shadow);
+    }
+    .option .letter {
+      background: var(--bg-tertiary);
+      color: var(--text-secondary);
+      width: 1.75rem; height: 1.75rem;
+      border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 600; font-size: 0.85rem; flex-shrink: 0;
+    }
+    .option.selected .letter { background: var(--accent); color: white; }
+    .option .content { flex: 1; }
+    .option .content h3 { font-size: 0.95rem; margin-bottom: 0.15rem; }
+    .option .content p { color: var(--text-secondary); font-size: 0.85rem; margin: 0; }
+
+    /* ===== CARDS (for showing designs/mockups) ===== */
+    .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; }
+    .card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .card:active {
+      transform: scale(0.985);
+    }
+    .card:hover {
+      border-color: var(--accent);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px var(--shadow-color);
+    }
+    .card.selected {
+      border-color: var(--selected-border);
+      border-width: 2px;
+      box-shadow: 0 6px 16px var(--selected-shadow);
+    }
+    .card-image { background: var(--bg-tertiary); aspect-ratio: 16/10; display: flex; align-items: center; justify-content: center; }
+    .card-body { padding: 1rem; }
+    .card-body h3 { margin-bottom: 0.25rem; }
+    .card-body p { color: var(--text-secondary); font-size: 0.85rem; }
+
+    /* ===== MOCKUP CONTAINER ===== */
+    .mockup {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      margin-bottom: 1.5rem;
+    }
+    .mockup-header {
+      background: var(--bg-tertiary);
+      padding: 0.5rem 1rem;
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      border-bottom: 1px solid var(--border);
+    }
+    .mockup-body { padding: 1.5rem; }
+
+    /* ===== SPLIT VIEW (side-by-side comparison) ===== */
+    .split { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+    @media (max-width: 700px) { .split { grid-template-columns: 1fr; } }
+
+    /* ===== PROS/CONS ===== */
+    .pros-cons { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 1rem 0; }
+    .pros, .cons { background: var(--bg-secondary); border-radius: 8px; padding: 1rem; }
+    .pros h4 { color: var(--success); font-size: 0.85rem; margin-bottom: 0.5rem; }
+    .cons h4 { color: var(--error); font-size: 0.85rem; margin-bottom: 0.5rem; }
+    .pros ul, .cons ul { margin-left: 1.25rem; font-size: 0.85rem; color: var(--text-secondary); }
+    .pros li, .cons li { margin-bottom: 0.25rem; }
+
+    /* ===== PLACEHOLDER (for mockup areas) ===== */
+    .placeholder {
+      background: var(--bg-tertiary);
+      border: 2px dashed var(--border);
+      border-radius: 8px;
+      padding: 2rem;
+      text-align: center;
+      color: var(--text-tertiary);
+    }
+
+    /* ===== INLINE MOCKUP ELEMENTS ===== */
+    .mock-nav { background: var(--accent); color: white; padding: 0.75rem 1rem; display: flex; gap: 1.5rem; font-size: 0.9rem; }
+    .mock-sidebar { background: var(--bg-tertiary); padding: 1rem; min-width: 180px; }
+    .mock-content { padding: 1.5rem; flex: 1; }
+    .mock-button { background: var(--accent); color: white; border: none; padding: 0.5rem 1rem; border-radius: 6px; font-size: 0.85rem; }
+    .mock-input { background: var(--bg-primary); border: 1px solid var(--border); border-radius: 6px; padding: 0.5rem; width: 100%; }
+
+    /* ===== iOS DEVICE SIMULATOR & HIG STYLE ===== */
+    .ios-device {
+      width: 375px;
+      height: 812px;
+      border: 12px solid #1c1c1e;
+      border-radius: 40px;
+      background: var(--bg-secondary);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+      margin: 2rem auto;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+    .ios-island {
+      position: absolute;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 110px;
+      height: 30px;
+      background: #000000;
+      border-radius: 20px;
+      z-index: 10;
+    }
+    .ios-status {
+      height: 44px;
+      padding: 0 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      z-index: 5;
+      padding-top: 12px;
+    }
+    .ios-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    .ios-navigation-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.5rem 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .ios-navigation-bar h2 {
+      font-size: 1.25rem;
+      margin: 0;
+    }
+    .ios-back-button {
+      color: var(--accent);
+      font-size: 0.9rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .ios-tab-bar {
+      height: 83px;
+      border-top: 1px solid var(--border);
+      background: var(--bg-secondary);
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      padding-bottom: 20px;
+      flex-shrink: 0;
+    }
+    .ios-tab-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      font-size: 0.65rem;
+      color: var(--text-secondary);
+      cursor: pointer;
+      gap: 4px;
+    }
+    .ios-tab-item.active {
+      color: var(--accent);
+    }
+    .ios-list {
+      display: flex;
+      flex-direction: column;
+      border-radius: 10px;
+      overflow: hidden;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+    }
+    .ios-list-row {
+      padding: 0.85rem 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.9rem;
+    }
+    .ios-list-row:last-child {
+      border-bottom: none;
+    }
+    .ios-chevron {
+      color: var(--text-tertiary);
+      font-weight: 300;
+    }
+    .ios-button {
+      background: var(--accent);
+      color: white;
+      border: none;
+      padding: 0.85rem;
+      border-radius: 12px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      text-align: center;
+      cursor: pointer;
+      width: 100%;
+    }
+    .ios-card {
+      background: var(--bg-secondary);
+      border-radius: 12px;
+      padding: 1rem;
+      border: 1px solid var(--border);
+      box-shadow: 0 2px 8px var(--shadow-color);
+      margin-bottom: 1rem;
+    }
+    .ios-button-secondary {
+      background: var(--bg-tertiary);
+      color: var(--accent);
+      border: none;
+      padding: 0.85rem;
+      border-radius: 12px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      text-align: center;
+      cursor: pointer;
+      width: 100%;
+      transition: opacity 0.15s ease;
+    }
+    .ios-button-secondary:active {
+      opacity: 0.7;
+    }
+    .ios-toggle {
+      width: 51px;
+      height: 31px;
+      background: var(--border);
+      border-radius: 16px;
+      position: relative;
+      cursor: pointer;
+      transition: background-color 0.2s;
+      display: inline-block;
+    }
+    .ios-toggle::after {
+      content: '';
+      position: absolute;
+      width: 27px;
+      height: 27px;
+      border-radius: 50%;
+      background: white;
+      top: 2px;
+      left: 2px;
+      transition: transform 0.2s;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+    .ios-toggle.active {
+      background: var(--success);
+    }
+    .ios-toggle.active::after {
+      transform: translateX(20px);
+    }
+    .ios-segmented-control {
+      background: var(--bg-tertiary);
+      border-radius: 8px;
+      padding: 2px;
+      display: flex;
+      gap: 2px;
+      margin-bottom: 1rem;
+    }
+    .ios-segment {
+      flex: 1;
+      text-align: center;
+      padding: 0.4rem 0;
+      font-size: 0.85rem;
+      font-weight: 500;
+      border-radius: 6px;
+      cursor: pointer;
+      color: var(--text-primary);
+      transition: background-color 0.15s, box-shadow 0.15s;
+    }
+    .ios-segment.active {
+      background: var(--bg-secondary);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    .ios-alert-overlay {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+    .ios-alert {
+      background: var(--bg-secondary);
+      width: 270px;
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+      text-align: center;
+      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+    }
+    .ios-alert-body {
+      padding: 1.25rem;
+    }
+    .ios-alert-title {
+      font-weight: 600;
+      font-size: 1.05rem;
+      margin-bottom: 4px;
+    }
+    .ios-alert-message {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      line-height: 1.35;
+    }
+    .ios-alert-buttons {
+      display: flex;
+      border-top: 1px solid var(--border);
+    }
+    .ios-alert-button {
+      flex: 1;
+      padding: 0.75rem 0;
+      background: transparent;
+      border: none;
+      font-size: 1rem;
+      color: var(--accent);
+      cursor: pointer;
+      font-weight: 500;
+    }
+    .ios-alert-button:first-child {
+      border-right: 1px solid var(--border);
+    }
+    .ios-alert-button.bold {
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>Precoding Design Spec Companion</h1>
+    <div class="status">Connected</div>
+  </div>
+
+  <div class="main">
+    <div id="claude-content">
+      <!-- CONTENT -->
+    </div>
+  </div>
+
+  <div class="indicator-bar">
+    <span id="indicator-text">Click an option above, then return to the terminal</span>
+  </div>
+
+</body>
+</html>
